@@ -1,244 +1,240 @@
-import OzEngine as oz
+import engine as oz
 import os
 
-class Coin(oz.Sprite):
+def choose():
 
-  __slots__ = "canvas_owner", "char", "position", "name", "group", "distance",
-  "on_function_ready"
-
-  def __init__(
-    self,
-    canvas_owner: object,
-    char: str,
-    position: list,
-    name: str,
-    group=None,
-  ):
-    '''Character that represents the sprite when rendered.'''
-    self.char = char
-    '''List that has two element "x" and "y" it tells where to render the sprite.'''
-    self.position = position
-    '''Name of the sprite that can be used to get reference from it using the "get_sprite" method throught a "Canvas" object.'''
-    self.name = name
-    '''Canvas that the sprite is associated to.'''
-    self.canvas_owner = canvas_owner
-    '''group is a string that be used to call a method on each sprite that has the same method with 
-    the method "call_group" through the canvas and it can also be used to check collision by seing which sprite of which
-    group is colliding with our sprite with the method "get_colliding_groups" that can be executed by a "Sprite" object. '''
-    self.group = group
-
-    if name in canvas_owner.sprite_names:
-      # change name if already taken
-      self.name = name + f"@{str(id(self))}"
-
-    # register infos in "canvas_owner" :
-    canvas_owner.sprite_tree.append(self)
-    canvas_owner.sprite_names.append(self.name)
-    canvas_owner.sprite_names_dict[self.name] = self
-    canvas_owner.sprite_position_dict[self] = position
-
-    if not (group in canvas_owner.sprite_group_dict):
-      #if group is new then add to "group_tree" and create new key
-      #location for "sprite_group_dict".
-      canvas_owner.sprite_group_dict[group] = []
-      canvas_owner.group_tree.append(group)
-
-    canvas_owner.sprite_group_dict[group].append(self)
-
-    if self.char == "🟡":
-      coin_yellow_position.append(self.position)
+    difficulty = 0
+    option = input("Would you like to play against a bot ? (y/n) : ")
+    if option == "n":
+        option = "player"
     else:
-      coin_red_position.append(self.position)
+        option = "bot"
+        difficulty = int(input("Choose a difficulty (1-6) : "))
+        while (difficulty > 1 or difficulty > 6):
+            print("⚠️ Please choose a valid difficulty ! ⚠️")
+            difficulty = int(input("Choose a difficulty (1-6) : "))
 
-
-def place_coin(x, val):
-
-  coin = Coin(canvas, val, [x, coin_level[x]], "coin")
-  coin_level[x] -= 1
-
-
-def get_possible_input():
-
-  return [str(c) for c in range(len(coin_level)) if not (coin_level[c] == -1)]
-
-
-def check_aligned():
-
-
-  has_alignement = (False , "None")
-  
-  # check if red are aligned
-  for red_coin_pos in coin_red_position:
-
-    horizontal_match = 0
-    vertical_match = 0
-    diagonal_left_match = 0
-    diagonal_right_match = 0
-
-    POS_X = red_coin_pos[0]
-    POS_Y = red_coin_pos[1]
-
-    # horizontal_match check
-    match_coin = []
-    for i in range(1, 4):
-      if [i + POS_X ,POS_Y] in coin_red_position:
-        horizontal_match += 1
-        
-
-      else:
-        break
-
-    if horizontal_match == 3:
-      has_alignement = (True , "red")
-      break
-
-
-    # vertical_match check
-    for i in range(1, 4):
-      if [POS_X, i + POS_Y] in coin_red_position:
-        vertical_match += 1
-
-      else:
-        break
-
-    if vertical_match == 3:
-      has_alignement = (True , "red")
-      break
-
-    
-    # diagonal_left_match check
-    for i in range(1, 4):
-      if [-i + POS_X, -i + POS_Y] in coin_red_position:
-        diagonal_left_match += 1
-
-      else:
-        break
-
-    if diagonal_left_match == 3:
-      has_alignement = (True , "red")
-      break
-
-    # diagonal_right_match check
-    for i in range(1, 4):
-      if [i + POS_X, -i + POS_Y] in coin_yellow_position:
-        diagonal_right_match += 1
-
-      else:
-        break
-
-    if diagonal_right_match == 3:
-      has_alignement = (True , "red")
-      break
-  
-  if has_alignement[1] != "None":
-    return has_alignement
-  
-  for yellow_coin_pos in coin_yellow_position:
-
-    POS_X = yellow_coin_pos[0]
-    POS_Y = yellow_coin_pos[1]
-
-    horizontal_match = 0
-    vertical_match = 0
-    diagonal_left_match = 0
-    diagonal_right_match = 0
-
-    # horizontal_match check
-    for i in range(1, 4):
-      if [i + POS_X ,POS_Y] in coin_yellow_position:
-        horizontal_match += 1
-
-      else:
-        break
-
-    if horizontal_match == 3:
-      has_alignement = True
-      break
-
-
-    # vertical_match check
-    for i in range(1, 4):
-      if [POS_X, i + POS_Y] in coin_yellow_position:
-        vertical_match += 1
-
-      else:
-        break
-
-    if vertical_match == 3:
-      has_alignement = (True , "yellow")
-      break
-
-    
-    # diagonal_left_match check
-    for i in range(1, 4):
-      if [-i + POS_X, -i + POS_Y] in coin_yellow_position:
-        diagonal_left_match += 1
-
-      else:
-        break
-
-    if diagonal_left_match == 3:
-      has_alignement = (True , "yellow")
-      break
-
-    # diagonal_right_match check
-    for i in range(1, 4):
-      if [i + POS_X, -i + POS_Y] in coin_yellow_position:
-        diagonal_right_match += 1
-
-      else:
-        break
-
-    if diagonal_right_match == 3:
-      has_alignement = (True , "yellow")
-      break
-
-  return has_alignement
+    return option, difficulty
 
 def game():
 
-  global canvas
-  global coin_red_position
-  global coin_yellow_position
-  global coin_level
-  
-  canvas = oz.Canvas("██")
-  camera = oz.Camera(canvas, [7, 6], [0, 0], "cam")
-
-  coin_level = [5 for i in range(camera.size[0])]
-  coin_red_position = []
-  coin_yellow_position = []
-
-  is_turn_p_one = True
-  print(camera.render())
-  print( " " + (" ".join(get_possible_input())))
-
-  while True:
-
-    action = input(": ")
-
-    if action in get_possible_input():
-    
-      place_coin(int(action), "🔴" if is_turn_p_one else "🟡") 
-      is_turn_p_one = not is_turn_p_one
-
-      is_aligned = check_aligned()
+    option, difficulty = choose()
 
 
-      if is_aligned[0]:
 
-        break
-    
-    os.system('cls')
-    print(camera.render())
-    print( " " + (" ".join(get_possible_input())))
-    
-  os.system('cls')
-  print(camera.render())
-  print(f"Aligned ! {is_aligned[1]} won !")
-  if input("Would you like to play an other round ?(y/n): ") == "y":
-    game()
-  else:
-    exit()
+    global canvas
+    global coin_level
+    global is_one_turn
+    global yellow_pos
+    global red_pos
+
+    red_pos = set()
+    yellow_pos = set()
+
+    coin_level = [6 for c in range(0, 7)]
+    is_one_turn = True
+
+    canvas = oz.Canvas("⚪")
+    cam = oz.Camera(canvas, {"x" : 7, "y": 6}, {"x" : 0, "y" : 0}, "cam" )
+
+    while True:
+        os.system("cls")
+        print(cam.render())
+        print_possible_input(get_possible_input(coin_level))
+        action = int(input("enter : ")) # gets the action given as an int
+        if action in get_possible_input(coin_level):
+            place_coin(action)
+
+
+            if is_one_turn:
+                if get_coin_alignment(red_pos)["connect"]:
+                    print("🔴 wins !")
+                    action = input("would you like to play again (y/n) : ")
+                    if action == "n":
+                        exit()
+                    else:
+                        game()
+            elif get_coin_alignment(yellow_pos)["connect"]:
+                print("🟡 wins !")
+                action = input("would you like to play again (y/n) : ")
+                if action == "n":
+                    exit()
+                else:
+                    game()
+                    return
+
+            print(cam.render())
+
+            is_one_turn = not is_one_turn  # just inverses
+            if option == "bot":
+                print("	√+-/*  Calculating Best Move...")
+                place_coin(minmax(yellow_pos, red_pos, coin_level, difficulty, True)[1])
+                is_one_turn = not is_one_turn  # just inverses
+        else:
+            print("! Invalid !")
+
+
+
+
+
+
+def get_possible_input(input : list):
+    input = []
+    i = 0
+    for c in coin_level:
+        if c != 0:
+            input.append(i)
+        i += 1
+    return input
+
+
+def print_possible_input(input : list):
+    out = ""
+    for i in input:
+        out += str(i) + " "
+    print(out)
+
+def place_coin(x : int):
+
+
+    y = coin_level[x] -1
+
+    char = "🟡"
+    # yellow-case
+
+    if is_one_turn:
+        char = "🔴"
+        red_pos.add((x, y))
+        # red-case
+    else:
+        yellow_pos.add((x, y))
+
+    # place coin
+    coin = oz.Sprite(canvas, char, {"x" : x, "y" : y}, "coin")
+    coin_level[x] -= 1
+
+
+
+def get_coin_alignment(board):
+
+    dict = {}
+
+    is_connect = False
+    align = 0
+
+    for c in board:
+
+        dict = check_align(c, board, 0, -1)
+        align += dict["align"]
+        if is_connect == False:
+            is_connect = dict["connect"]
+
+        dict = check_align(c, board,0, 1)
+        align += dict["align"]
+        if is_connect == False:
+            is_connect = dict["connect"]
+
+        dict = check_align(c, board,-1, 0)
+        align += dict["align"]
+        if is_connect == False:
+            is_connect = dict["connect"]
+
+        dict = check_align(c, board,1, 0)
+        align += dict["align"]
+        if is_connect == False:
+            is_connect = dict["connect"]
+
+        dict = check_align(c, board,-1, 1)
+        align += dict["align"]
+        if is_connect == False:
+            is_connect = dict["connect"]
+
+        dict = check_align(c, board,1, 1)
+        align += dict["align"]
+        if is_connect == False:
+            is_connect = dict["connect"]
+
+        dict = check_align(c, board,-1, -1)
+        align += dict["align"]
+        if is_connect == False:
+            is_connect = dict["connect"]
+
+        dict = check_align(c, board,1, -1)
+        align += dict["align"]
+        if is_connect == False:
+            is_connect = dict["connect"]
+
+    return {"align" : align, "connect" : is_connect}
+
+
+
+def check_align(coin, list_pos, x=0, y=0):
+    is_4_connect = False
+    # left case
+    align = 0
+    for i in range(1, 4):
+
+        if (coin[0] + i * x, coin[1] + i * y) in list_pos:
+            align += 1
+        else:
+            break
+
+
+
+    if align == 3:
+        is_4_connect = True
+
+
+    if align == 0:
+        return {"align" : 0, "connect" : is_4_connect}
+
+    return {"align" : pow(align, align), "connect" : is_4_connect}
+
+
+def minmax(y_board, r_board, cf_level , depth, is_max, alpha=float("-inf"), beta=float("+inf")):
+    if depth == 0 or get_coin_alignment(y_board)["connect"]:
+        return get_coin_alignment(y_board)["align"] - get_coin_alignment(r_board)["align"] * 1.01, None
+
+    if is_max:
+
+        best_score = float("-inf")
+        best_move = None
+
+        for move in get_possible_input(cf_level):
+            new_board = y_board.copy()
+            new_cf_level = cf_level.copy()
+            new_cf_level[move] -= 1
+            new_board.add((move, new_cf_level[move]))
+            score, _ = minmax(new_board, r_board, new_cf_level, depth - 1, False)
+            if score > best_score:
+                best_score = score
+                best_move = move
+
+            alpha = max(alpha, score)
+            if alpha >= beta:
+                break
+
+        return best_score, best_move
+
+    else:
+
+        best_score = float("inf")
+        best_move = None
+
+        for move in get_possible_input(cf_level):
+            new_board = r_board.copy()
+            new_cf_level = cf_level.copy()
+            new_cf_level[move] -= 1
+            new_board.add((move, new_cf_level[move]))
+            score, _ = minmax(y_board, new_board, new_cf_level, depth - 1, True)
+            if score < best_score:
+                best_score = score
+                best_move = move
+            beta = min(beta, score)
+            if beta <= alpha:
+                break
+
+        return best_score, best_move
+
 
 game()
