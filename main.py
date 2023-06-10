@@ -10,7 +10,7 @@ def choose():
     else:
         option = "bot"
         difficulty = int(input("Choose a difficulty (1-6) : "))
-        while (difficulty > 1 or difficulty > 6):
+        while (difficulty < 1 or difficulty > 6):
             print("⚠️ Please choose a valid difficulty ! ⚠️")
             difficulty = int(input("Choose a difficulty (1-6) : "))
 
@@ -40,29 +40,12 @@ def game():
     while True:
         os.system("cls")
         print(cam.render())
+        check_red_wins()
+        check_yellow_wins()
         print_possible_input(get_possible_input(coin_level))
         action = int(input("enter : ")) # gets the action given as an int
         if action in get_possible_input(coin_level):
             place_coin(action)
-
-
-            if is_one_turn:
-                if get_coin_alignment(red_pos)["connect"]:
-                    print("🔴 wins !")
-                    action = input("would you like to play again (y/n) : ")
-                    if action == "n":
-                        exit()
-                    else:
-                        game()
-            elif get_coin_alignment(yellow_pos)["connect"]:
-                print("🟡 wins !")
-                action = input("would you like to play again (y/n) : ")
-                if action == "n":
-                    exit()
-                else:
-                    game()
-                    return
-
             print(cam.render())
 
             is_one_turn = not is_one_turn  # just inverses
@@ -70,13 +53,31 @@ def game():
                 print("	√+-/*  Calculating Best Move...")
                 place_coin(minmax(yellow_pos, red_pos, coin_level, difficulty, True)[1])
                 is_one_turn = not is_one_turn  # just inverses
+
         else:
             print("! Invalid !")
 
 
 
+def check_yellow_wins():
+    if get_coin_alignment(yellow_pos)["connect"]:
+        print("🟡 wins !")
+        action = input("would you like to play again (y/n) : ")
+        if action == "n":
+            exit()
+        else:
+            game()
+            return
 
-
+def check_red_wins():
+    if get_coin_alignment(red_pos)["connect"]:
+        print("🔴 wins !")
+        action = input("would you like to play again (y/n) : ")
+        if action == "n":
+            exit()
+        else:
+            game()
+            return
 
 def get_possible_input(input : list):
     input = []
